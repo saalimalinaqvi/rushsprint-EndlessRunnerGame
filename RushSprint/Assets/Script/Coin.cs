@@ -6,15 +6,15 @@ public class Coin : MonoBehaviour
 
     void Update()
     {
-        transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime); // Rotate Ring
+        transform.Rotate(Vector3.up * rotationSpeed * Time.deltaTime); // Rotate Coin
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) // Sonic collects the ring
+        if (other.CompareTag("Player"))
         {
-            GameManager.instance.AddRings(1); // Add 1 ring
-            Destroy(gameObject); // Remove Ring
+            GameManager.instance.AddCoins(1); // Add 1 coin
+            Destroy(gameObject); // Remove Coin
         }
     }
 }

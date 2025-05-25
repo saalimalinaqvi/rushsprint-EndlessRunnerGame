@@ -9,6 +9,7 @@ TagManager:
   - BulletPickup
   - BulletCollect
   - BoostSpeed
+  - Gem
   layers:
   - Default
   - TransparentFX

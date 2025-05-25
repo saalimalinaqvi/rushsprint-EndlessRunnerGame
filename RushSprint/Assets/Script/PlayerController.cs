@@ -1,14 +1,31 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.UI;
+using TMPro;
+using UnityEngine.EventSystems;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Movement")]
     public float forwardSpeed = 10f;
     public float laneDistance = 3f;
     public float jumpForce = 10f;
     public float gravity = -20f;
     public float slideDuration = 0.8f;
+
+    [Header("Bullet")]
+    private int obstacleHitCount = 0;
+    public float bulletSpeed = 20f;
+    public GameObject bulletPrefab;
+    public Transform bulletSpawnPoint;
+    public int maxBullets = 10;
+    public int currentBullets = 8;
+    public int bulletsInGun = 2; // UI: 2/8
+    public TextMeshProUGUI bulletUIText;
+
+    [Header("Boost")]
+    private bool isBoosted = false;
+    private float normalSpeed;
+    private bool obstacleDisabled = false;
 
     private CharacterController controller;
     private Vector3 moveDirection;
@@ -22,49 +39,24 @@ public class PlayerController : MonoBehaviour
     private Vector2 touchEndPos;
     private bool swipeUp, swipeDown, swipeLeft, swipeRight;
 
-    // Bullet System
-    private int obstacleHitCount = 0;
-    public float bulletSpeed = 20f; // Adjust as needed
-    public GameObject bulletPrefab;
-    public Transform bulletSpawnPoint;
-    public int maxBullets = 10;
-    public int currentBullets = 8;
-    public int bulletsInGun = 2; // UI: 2/8
-    private bool isReloading = false;
-    public Text bulletUIText; // Assign in Inspector
+    private float lastTapTime = 0f;
+    private float doubleTapThreshold = 0.3f; // Max time between taps for a double tap
+    private float nextAllowedTapTime = 0f;   // Cooldown tracker
 
-    // Boost Speed
-    private bool isBoosted = false;
-    private float normalSpeed;
-    private bool obstacleDisabled = false;
-
-    // Audio
-    private AudioSource audioSource;
-
-    public AudioClip runSound;
-    public AudioClip slideSound;
-    public AudioClip jumpSound;
-    public AudioClip shootSound;
-    public AudioClip coinCollectSound;
-    public AudioClip boostSpeedSound;
-    public AudioClip bulletCollectSound;
-
-    //private bool isRunning = false;
-
+    #region Monobehaviour Methods
     void Start()
     {
         controller = GetComponent<CharacterController>();
         anim = GetComponent<Animator>();
         UpdateBulletUI();
 
-        //Audio
-        audioSource = GetComponent<AudioSource>();
+        SoundManager.Instance.Pause(AudioType.BG);
+        SoundManager.Instance.Play(AudioType.RUNNING);
     }
 
     void Update()
     {
         moveDirection.z = forwardSpeed;
-        PlayLoopingSound(runSound);
         DetectSwipe();
 
         if ((Input.GetKeyDown(KeyCode.LeftArrow) || swipeLeft) && lane > 0)
@@ -87,7 +79,7 @@ public class PlayerController : MonoBehaviour
             {
                 swipeUp = false;
                 StartCoroutine(Jump());
-                PlaySound(jumpSound);
+                SoundManager.Instance.PlayAudio(SoundType.JUMP);
             }
         }
         else
@@ -99,16 +91,39 @@ public class PlayerController : MonoBehaviour
         {
             swipeDown = false;
             StartCoroutine(Slide());
-            PlaySound(slideSound);
-        }
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            Shoot();
+            SoundManager.Instance.PlayAudio(SoundType.SLIDE);
         }
 
         controller.Move(moveDirection * Time.deltaTime);
+
+        if (Time.time < nextAllowedTapTime)
+            return; // Still in cooldown, don't allow tapping
+
+        if (Input.GetMouseButtonDown(0) && !isBoosted)
+        {
+            if (!EventSystem.current.IsPointerOverGameObject())
+            {
+                float currentTime = Time.time;
+
+                if (currentTime - lastTapTime < doubleTapThreshold)
+                {
+                    Shoot();
+
+                    nextAllowedTapTime = Time.time + 0.5f;
+                    lastTapTime = 0f; // Reset
+                }
+                else
+                {
+                    // First tap
+                    lastTapTime = currentTime;
+                }
+            }
+        }
     }
+
+    #endregion
+
+    #region Custom Methods
 
     IEnumerator Jump()
     {
@@ -173,10 +188,12 @@ public class PlayerController : MonoBehaviour
 
     public void Shoot()
     {
-        PlaySound(shootSound);  
+        if (bulletsInGun <= 0 || bulletPrefab == null) return;
+
+        SoundManager.Instance.PlayAudio(SoundType.SHOOT);
 
         if (bulletsInGun > 0)
-    {
+        {
             GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
 
             Rigidbody rb = bullet.GetComponent<Rigidbody>();
@@ -197,15 +214,12 @@ public class PlayerController : MonoBehaviour
                 StartCoroutine(AutoReload());
             }
 
-            // ✅ Correct way to destroy the instantiated bullet after 3 seconds
             Destroy(bullet.gameObject, 3f);
         }
     }
 
     IEnumerator AutoReload()
     {
-
-        isReloading = true;
         yield return new WaitForSeconds(2f); // Simulating reload time
 
         if (currentBullets >= 2)
@@ -219,7 +233,6 @@ public class PlayerController : MonoBehaviour
             currentBullets = 0;
         }
 
-        isReloading = false;
         UpdateBulletUI();
     }
 
@@ -228,7 +241,6 @@ public class PlayerController : MonoBehaviour
         currentBullets = Mathf.Min(currentBullets + amount, maxBullets);
         UpdateBulletUI();
     }
-
 
     void UpdateBulletUI()
     {
@@ -255,56 +267,42 @@ public class PlayerController : MonoBehaviour
         forwardSpeed = normalSpeed;
         isBoosted = false;
         obstacleDisabled = false;
-    }
 
-    void PlaySound(AudioClip clip)
-    {
-        audioSource.PlayOneShot(clip);
-    }
-
-    void PlayLoopingSound(AudioClip clip)
-    {
-        audioSource.clip = clip;
-        audioSource.loop = true;
-        audioSource.Play();
-    }
-
-    void StopSound()
-    {
-        audioSource.Stop();
+        SoundManager.Instance.StopBoostSound();
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Coin"))
         {
-            PlaySound(coinCollectSound);
+            SoundManager.Instance.PlayAudio(SoundType.COIN_COLLECT);
+        }
+        else if (other.CompareTag("Gem"))
+        {
+            SoundManager.Instance.PlayAudio(SoundType.GEM_COLLECT);
         }
         else if (other.CompareTag("BoostSpeed"))
         {
-            PlaySound(boostSpeedSound);
+            SoundManager.Instance.PlayAudio(SoundType.BOOST);
         }
         else if (other.CompareTag("BulletCollect"))
         {
-            PlaySound(bulletCollectSound);
+            SoundManager.Instance.PlayAudio(SoundType.BULLET_COLLECT);
         }
-
-        if (other.CompareTag("Obstacle"))
+        else if (other.CompareTag("Obstacle"))
         {
-            if (obstacleDisabled)
+            if (!isBoosted)
             {
-                other.gameObject.SetActive(false);
-                return;
+                SoundManager.Instance.Pause(AudioType.RUNNING);
+                SoundManager.Instance.PlayAudio(SoundType.GAMEOVER);
+                GameManager.instance.PlayerHit(other.gameObject);
             }
-
-            obstacleHitCount++;
-            if (obstacleHitCount >= 2)
+            else
             {
-                Destroy(other.gameObject);
-                obstacleHitCount = 0;
+                other.gameObject.SetActive(false); // Smash during boost
             }
-
-            GameManager.instance.PlayerHit();
         }
     }
+
+    #endregion
 }
