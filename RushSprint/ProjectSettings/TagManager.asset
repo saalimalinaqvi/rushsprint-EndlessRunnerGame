@@ -10,6 +10,7 @@ TagManager:
   - BulletCollect
   - BoostSpeed
   - Gem
+  - Enemy
   layers:
   - Default
   - TransparentFX
