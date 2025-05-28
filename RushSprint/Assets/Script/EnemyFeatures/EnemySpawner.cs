@@ -20,7 +20,7 @@ public class EnemySpawner : MonoBehaviour
         if (!isSpawning || GameManager.instance == null || GameManager.instance.IsGameOver() || player == null)
             return;
 
-        Vector3 spawnPos = new Vector3(0, 0, player.position.z + 50f);
+        Vector3 spawnPos = new Vector3(0, player.position.y, player.position.z + 50f);
 
         GameObject enemy = Instantiate(enemyPrefab, spawnPos, Quaternion.identity);
         spawnedEnemies.Add(enemy);

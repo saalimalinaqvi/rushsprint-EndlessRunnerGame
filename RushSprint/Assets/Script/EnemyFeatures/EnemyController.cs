@@ -9,9 +9,18 @@ public class EnemyController : MonoBehaviour
 
     private float nextFireTime;
     private Transform player;
+    public Animator enemeyAnim;
+
+    public float forwardSpeed = 20f;
+    private CharacterController controller;
+    private Vector3 moveDirection;
+
 
     private void Start()
     {
+        controller = GetComponent<CharacterController>();
+        enemeyAnim =GetComponent<Animator>();
+       // enemyRun();
         player = GameObject.FindGameObjectWithTag("Player").transform;
 
         // Rotate once towards the player's position at spawn
@@ -26,6 +35,8 @@ public class EnemyController : MonoBehaviour
 
     private void Update()
     {
+        moveDirection.z = forwardSpeed;
+        controller.Move(moveDirection * Time.deltaTime);
         if (Time.time >= nextFireTime)
         {
             FireBullet();
@@ -59,4 +70,11 @@ public class EnemyController : MonoBehaviour
     {
         Destroy(gameObject);
     }
+
+
+    //void enemyRun()
+    //{
+    //    Vector3 lookDir = -(player.position - transform.position);
+    //    lookDir.y = 0;
+    //}
 }
