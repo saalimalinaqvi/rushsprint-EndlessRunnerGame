@@ -34,6 +34,8 @@ public class GameManager : MonoBehaviour
             instance = this;
         }
 
+        HealthSystem playerHealth = GameObject.FindGameObjectWithTag("Player").GetComponent<HealthSystem>();
+        playerHealth.OnDeath += PlayerDead;
 
         // Load last saved values
         score = PlayerPrefs.GetFloat(Utils.SCORE, 0);
@@ -67,7 +69,6 @@ public class GameManager : MonoBehaviour
     private void Update()
     {
         score += 10 * Time.deltaTime;
-        //AddScore();
         UpdateUI();
     }
 
@@ -75,11 +76,6 @@ public class GameManager : MonoBehaviour
 
 
     #region Custom Methods
-
-    //public void AddScore()
-    //{
-    //    UpdateUI();
-    //}
 
     public void AddCoins(int amount)
     {
@@ -99,6 +95,11 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
+    private void PlayerDead()
+    {
+        GameOver();
+    }
+
     [System.Obsolete]
     public void PlayerHit(GameObject obj)
     {
@@ -114,12 +115,22 @@ public class GameManager : MonoBehaviour
         pauseButton.gameObject.SetActive(false);
         Time.timeScale = 0f; // Pause the game
 
+        //Stop enemy spawning
+        EnemySpawner spawner = FindObjectOfType<EnemySpawner>();
+        if (spawner != null)
+            spawner.StopAndClearEnemies();
+
         // ADs
         if (showAd)
         {
             FindObjectOfType<AdMobManager>().ShowInterstitialAd();
             Debug.Log("Game Over! Interstitial Ad Played.");
         }
+    }
+
+    public bool IsGameOver()
+    {
+        return gameOverUI.activeSelf;
     }
 
     public void RestartGame()

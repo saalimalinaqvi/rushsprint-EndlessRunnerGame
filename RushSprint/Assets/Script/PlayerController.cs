@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviour
     public float slideDuration = 0.8f;
 
     [Header("Bullet")]
-    private int obstacleHitCount = 0;
     public float bulletSpeed = 20f;
     public GameObject bulletPrefab;
     public Transform bulletSpawnPoint;
@@ -195,6 +194,11 @@ public class PlayerController : MonoBehaviour
         if (bulletsInGun > 0)
         {
             GameObject bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, Quaternion.identity);
+            Bullet bulletScript = bullet.GetComponent<Bullet>();
+            bulletScript.damage = 25f;
+            bulletScript.targetTag = "Enemy";
+            bulletScript.canHitObstacle = true;
+            bulletScript.isEnemyBullet = false;
 
             Rigidbody rb = bullet.GetComponent<Rigidbody>();
             if (rb != null)
