@@ -61,7 +61,7 @@ public class TrackManager : MonoBehaviour
     {
         if (trackPrefabs.Length == 0)
         {
-            Debug.LogError("No track prefabs assigned!");
+            //Debug.LogError("No track prefabs assigned!");
             return;
         }
 
@@ -70,7 +70,7 @@ public class TrackManager : MonoBehaviour
                                        Quaternion.identity);
 
         float trackLength = GetTrackLength(track);
-        Debug.Log("Spawned track at Z: " + spawnZ + " with length: " + trackLength);
+        //Debug.Log("Spawned track at Z: " + spawnZ + " with length: " + trackLength);
 
         activeTracks.Add(track);
         spawnZ += trackLength; // Move spawn position forward
@@ -80,7 +80,7 @@ public class TrackManager : MonoBehaviour
     {
         if (activeTracks.Count > 5) // Keep only a few active tracks
         {
-            Debug.Log("Deleting track");
+            //Debug.Log("Deleting track");
             Destroy(activeTracks[0]);
             activeTracks.RemoveAt(0);
         }

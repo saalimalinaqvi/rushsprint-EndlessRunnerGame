@@ -1,6 +1,5 @@
 using UnityEngine;
 using GoogleMobileAds.Api;
-using System;
 
 public class AdMobManager : MonoBehaviour
 {
@@ -19,12 +18,15 @@ public class AdMobManager : MonoBehaviour
         MobileAds.Initialize(initStatus => { Debug.Log("AdMob Initialized!"); });
 
         // Load Ads
-        LoadBannerAd();
-        LoadInterstitialAd();
-        LoadRewardedAd();
+        if (GameManager.instance.showAd)
+        {
+            LoadBannerAd();
+            LoadInterstitialAd();
+            LoadRewardedAd();
+        }
     }
 
-    // 🟢 Load Banner Ad
+    // Load Banner Ad
     private void LoadBannerAd()
     {
         if (bannerAd != null)
@@ -37,7 +39,7 @@ public class AdMobManager : MonoBehaviour
         bannerAd.LoadAd(request);
     }
 
-    // 🟢 Load Interstitial Ad
+    // Load Interstitial Ad
     private void LoadInterstitialAd()
     {
         InterstitialAd.Load(interstitialAdId, new AdRequest(), (InterstitialAd ad, LoadAdError error) =>
@@ -59,7 +61,7 @@ public class AdMobManager : MonoBehaviour
         });
     }
 
-    // 🟢 Show Interstitial Ad
+    // Show Interstitial Ad
     public void ShowInterstitialAd()
     {
         if (interstitialAd != null && interstitialAd.CanShowAd())
@@ -72,7 +74,7 @@ public class AdMobManager : MonoBehaviour
         }
     }
 
-    // 🟢 Load Rewarded Ad
+    // Load Rewarded Ad
     private void LoadRewardedAd()
     {
         RewardedAd.Load(rewardedAdId, new AdRequest(), (RewardedAd ad, LoadAdError error) =>
@@ -94,7 +96,7 @@ public class AdMobManager : MonoBehaviour
         });
     }
 
-    // 🟢 Show Rewarded Ad
+    // Show Rewarded Ad
     public void ShowRewardedAd()
     {
         if (rewardedAd != null && rewardedAd.CanShowAd())
