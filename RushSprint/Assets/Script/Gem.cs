@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Gem : MonoBehaviour
 {
-    public float rotationSpeed = 100f;
+    [SerializeField] private float rotationSpeed = 100f;
 
     private void OnEnable()
     {

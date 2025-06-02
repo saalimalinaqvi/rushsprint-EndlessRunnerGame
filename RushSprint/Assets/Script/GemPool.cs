@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class GemPool : MonoBehaviour
 {
     public GameObject gemPrefab;
-    public int poolSize = 50;
+    [SerializeField] private int poolSize = 50;
 
     private List<GameObject> gemPool = new List<GameObject>();
 
