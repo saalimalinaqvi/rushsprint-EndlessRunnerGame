@@ -4,6 +4,10 @@ public class Gem : MonoBehaviour
 {
     public float rotationSpeed = 100f;
 
+    private void OnEnable()
+    {
+        
+    }
     void Update()
     {
         transform.Rotate(Vector3.right * rotationSpeed * Time.deltaTime); // Rotate Gem
@@ -14,7 +18,7 @@ public class Gem : MonoBehaviour
         if (other.CompareTag("Player")) 
         {
             GameManager.instance.AddGems(1); // Add 1 gem
-            Destroy(gameObject); // Remove Gem
+            gameObject.SetActive(false); // Remove Gem
         }
     }
 }
